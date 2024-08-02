@@ -1,14 +1,18 @@
-import { StyleSheet, Text, View, SectionList, Pressable } from 'react-native';
-import { useState, useContext } from 'react';
+import { StyleSheet, Text, SectionList, View, Pressable } from 'react-native';
+import { useState, useContext, useCallback } from 'react';
 import TaskItem from './TaskItem';
 import Animated, { SlideInLeft } from 'react-native-reanimated';
 import { Colors } from '@/constants/Colors';
 import { TasksContext, Task, Priority } from '@/store/tasks-context';
+import { useFocusEffect } from 'expo-router';
+import LoadingIndicator from '@/components/UI/LoadingIndicator';
 
-
-
-const TaskList = () => {
-	const { tasks } = useContext(TasksContext);
+interface Props {
+	date: string;
+}
+const TaskList = ({ date }: Props) => {
+	const { tasks, getTasks } = useContext(TasksContext);
+	const [loading, setLoading] = useState<boolean>(false);
 	const [expandedSections, setExpandedSections] = useState<
 		Record<Priority, boolean>
 	>({
@@ -16,7 +20,6 @@ const TaskList = () => {
 		weekly: false,
 		monthly: false,
 	});
-	// console.log(tasks[0]);
 
 	const toggleSectionHandler = (priority: Priority) => {
 		setExpandedSections((prev) => ({
@@ -31,8 +34,21 @@ const TaskList = () => {
 		monthly: [],
 	};
 
+	useFocusEffect(
+		useCallback(() => {
+			setLoading(true);
+			getTasks().finally(() => {
+				setLoading(false);
+			});
+		}, [date])
+	);
+
 	tasks.forEach((task) => {
-		groupedTasks[task.priority].push(task);
+		if (task.priority === 'daily' && task.created_at === date) {
+			groupedTasks[task.priority].push(task);
+		} else if (task.priority !== 'daily' && task.completed === false) {
+			groupedTasks[task.priority].push(task);
+		}
 	});
 
 	const sections = Object.keys(groupedTasks).map((priority) => ({
@@ -41,42 +57,49 @@ const TaskList = () => {
 	}));
 
 	return (
-		<View style={styles.content}>
-			<SectionList
-				sections={sections}
-				showsVerticalScrollIndicator={false}
-				stickySectionHeadersEnabled={false}
-				keyExtractor={(item) => item.id}
-				renderItem={({ item, section }) => {
-					if (!expandedSections[section.title as Priority]) {
-						return null;
-					}
-					return (
-						<Animated.View entering={SlideInLeft}>
-							<TaskItem
-								id={item.id}
-								title={item.title}
-								description={item.description}
-								// date={item.date}
-								priority={item.priority}
-								procedure_steps={item.procedure_steps}
-								completed={item.completed}
-							/>
-						</Animated.View>
-					);
-				}}
-				renderSectionHeader={({ section: { title } }) => (
-					<Pressable
-						onPress={() => {
-							toggleSectionHandler(title as Priority);
+		<>
+			{loading ? (
+				<LoadingIndicator />
+			) : (
+				<View style={styles.content}>
+					<SectionList
+						sections={sections}
+						showsVerticalScrollIndicator={false}
+						stickySectionHeadersEnabled={false}
+						keyExtractor={(item) => item.id}
+						renderItem={({ item, section }) => {
+							if (!expandedSections[section.title as Priority]) {
+								return null;
+							}
+							return (
+								<Animated.View entering={SlideInLeft}>
+									<TaskItem
+										id={item.id}
+										title={item.title}
+										priority={item.priority}
+										procedure_steps={item.procedure_steps}
+										completed={item.completed}
+									/>
+								</Animated.View>
+							);
 						}}
-						style={({ pressed }) => [styles.button, pressed && styles.pressed]}
-					>
-						<Text style={styles.header}>{title.toUpperCase()}</Text>
-					</Pressable>
-				)}
-			/>
-		</View>
+						renderSectionHeader={({ section: { title } }) => (
+							<Pressable
+								onPress={() => {
+									toggleSectionHandler(title as Priority);
+								}}
+								style={({ pressed }) => [
+									styles.button,
+									pressed && styles.pressed,
+								]}
+							>
+								<Text style={styles.header}>{title.toUpperCase()}</Text>
+							</Pressable>
+						)}
+					/>
+				</View>
+			)}
+		</>
 	);
 };
 

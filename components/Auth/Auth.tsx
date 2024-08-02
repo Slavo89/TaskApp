@@ -3,6 +3,7 @@ import { Alert, StyleSheet, View, AppState } from 'react-native';
 import { supabase } from '../../util/supabase';
 import { Button, Input } from '@rneui/themed';
 import { TasksContext } from '@/store/tasks-context';
+import { Colors } from '@/constants/Colors';
 
 // Tells Supabase Auth to continuously refresh the session automatically if
 // the app is in the foreground. When this is added, you will continue to receive
@@ -55,22 +56,30 @@ export default function Auth() {
 			<View style={[styles.verticallySpaced, styles.mt20]}>
 				<Input
 					label="Email"
-					leftIcon={{ type: 'font-awesome', name: 'envelope' }}
+					leftIcon={{
+						type: 'font-awesome',
+						name: 'envelope',
+						color: Colors.font,
+					}}
 					onChangeText={(text) => setEmail(text)}
 					value={email}
 					placeholder="email@address.com"
 					autoCapitalize={'none'}
+					style={styles.input}
+					cursorColor={Colors.font}
 				/>
 			</View>
 			<View style={styles.verticallySpaced}>
 				<Input
 					label="Password"
-					leftIcon={{ type: 'font-awesome', name: 'lock' }}
+					leftIcon={{ type: 'font-awesome', name: 'lock', color: Colors.font }}
 					onChangeText={(text) => setPassword(text)}
 					value={password}
 					secureTextEntry={true}
 					placeholder="Password"
 					autoCapitalize={'none'}
+					style={styles.input}
+					cursorColor={Colors.font}
 				/>
 			</View>
 			<View style={[styles.verticallySpaced, styles.mt20]}>
@@ -95,6 +104,7 @@ const styles = StyleSheet.create({
 	container: {
 		marginTop: 40,
 		padding: 12,
+		// backgroundColor: Colors.background,
 	},
 	verticallySpaced: {
 		paddingTop: 4,
@@ -103,5 +113,10 @@ const styles = StyleSheet.create({
 	},
 	mt20: {
 		marginTop: 20,
+	},
+	input: {
+		color: Colors.font,
+		marginLeft: 10,
+		
 	},
 });

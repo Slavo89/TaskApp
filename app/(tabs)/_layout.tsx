@@ -9,8 +9,6 @@ const TabsLayout = () => {
 				tabBarStyle: {
 					backgroundColor: Colors.background,
 				},
-				// tabBarInactiveBackgroundColor: Colors.background,
-				// tabBarActiveBackgroundColor: Colors.background,
 				tabBarActiveTintColor: '#fff',
 				tabBarInactiveTintColor: '#9c9c9c',
 				tabBarHideOnKeyboard: true,
@@ -18,7 +16,7 @@ const TabsLayout = () => {
 			}}
 		>
 			<Tabs.Screen
-				name="calendar/Schedule"
+				name="main/Schedule"
 				options={{
 					headerTitle: 'Your Schedule',
 					title: 'Schedule',
@@ -37,13 +35,13 @@ const TabsLayout = () => {
 			/>
 
 			<Tabs.Screen
-				name="calendar/SecondPage"
+				name="main/Templates"
 				options={{
-					headerTitle: 'Second Page',
-					title: 'Second',
+					headerTitle: 'Templates Manager',
+					title: 'Templates',
 					tabBarIcon: ({ color }) => (
 						<FontAwesome
-							name="question"
+							name="folder-open"
 							size={18}
 							color={color}
 						/>

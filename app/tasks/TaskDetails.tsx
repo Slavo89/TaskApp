@@ -7,13 +7,19 @@ import {
 	ActivityIndicator,
 	Button,
 } from 'react-native';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { ProcedureStep } from '@/components/UI/ProcedureModal';
-import { completeTask, readTask, updateTaskStep } from '../../util/helpers';
+import {
+	completeTask,
+	deleteTask,
+	readTask,
+	updateTaskStep,
+} from '../../util/helpers';
 import { useEffect, useContext, useState } from 'react';
 import { Colors } from '@/constants/Colors';
 import { Icon } from '@rneui/themed';
 import { TimerContext } from '@/store/timer-context';
+import LoadingIndicator from '@/components/UI/LoadingIndicator';
 
 type Params = {
 	[key: string]: string;
@@ -22,16 +28,15 @@ type Params = {
 interface TaskDetails {
 	id: string;
 	title: string;
-	description: string;
 	priority: string;
 	procedure_steps: ProcedureStep[];
 	completed: boolean;
 }
 
 const TaskDetails = () => {
-	const { id } = useLocalSearchParams<Params>();
+	const { id, title } = useLocalSearchParams<Params>();
 	const [taskDetails, setTaskDetails] = useState<TaskDetails | null>(null);
-	const [loading, setLoading] = useState<boolean>(true);
+	const [loading, setLoading] = useState<boolean>(false);
 	const { startTimer, stopTimer, timer, isRunning, timerId } =
 		useContext(TimerContext);
 
@@ -43,26 +48,39 @@ const TaskDetails = () => {
 				if (data && data.length > 0) {
 					setTaskDetails(data[0]);
 				}
+
 				setLoading(false);
 			}
 		};
 		fetchData();
 	}, [id]);
 
-	if (loading || !taskDetails) {
-		return (
-			<ActivityIndicator
-				size="large"
-				color="#0000ff"
-			/>
-		);
-	}
+	// if (loading || !taskDetails) {
+	// 	return (
+	// 		<View style={styles.container}>
+	// 			<Stack.Screen
+	// 				options={{
+	// 					headerTitle: taskDetails?.title,
+	// 					headerStyle: {
+	// 						backgroundColor: Colors.headerBackground,
+	// 					},
+	// 					headerTintColor: Colors.font,
+	// 					headerBackTitleVisible: false,
+	// 				}}
+	// 			/>
+	// 			<ActivityIndicator
+	// 				size="large"
+	// 				color={Colors.font}
+	// 			/>
+	// 		</View>
+	// 	);
+	// }
 
 	const toggleStepCompletion = async (
 		taskId: string | undefined,
 		stepId: string
 	) => {
-		if (taskDetails.completed) {
+		if (taskDetails?.completed) {
 			return;
 		}
 		if (taskDetails) {
@@ -73,7 +91,7 @@ const TaskDetails = () => {
 		}
 
 		// Updating step
-		const updatedSteps = taskDetails.procedure_steps.map((step) => {
+		const updatedSteps = taskDetails!.procedure_steps.map((step) => {
 			if (step.id === stepId) {
 				return { ...step, completed: !step.completed };
 			}
@@ -93,73 +111,95 @@ const TaskDetails = () => {
 
 	const completeTaskHandler = (taskId: string | undefined) => {
 		completeTask(taskId);
+		router.back();
+	};
+
+	const deleteTaskHandler = (taskId: string | undefined) => {
+		deleteTask(taskId);
+		router.back();
 	};
 
 	return (
 		<View style={styles.container}>
 			<Stack.Screen
 				options={{
-					headerTitle: taskDetails?.title,
+					headerTitle: title,
 					headerStyle: {
 						backgroundColor: Colors.headerBackground,
 					},
 					headerTintColor: Colors.font,
 					headerBackTitleVisible: false,
 					headerRight: () =>
-						!taskDetails.completed ? (
+						!taskDetails?.completed ? (
 							<Button
 								title={isRunning ? 'Clear timer' : 'Start timer'}
 								onPress={toggleTimer}
 							/>
-						) : <Text style={styles.description}>Task Completed</Text>,
+						) : (
+							<Text style={styles.description}>Task Completed</Text>
+						),
 				}}
 			/>
-			{/* <View>
-				<Text style={styles.description}>{taskDetails?.description}</Text>
-			</View> */}
 
-			<FlatList
-				style={{ marginBottom: 20 }}
-				data={taskDetails?.procedure_steps}
-				keyExtractor={(item) => item.id}
-				showsVerticalScrollIndicator={false}
-				renderItem={({ item }) => (
-					<TouchableOpacity onPress={() => toggleStepCompletion(id, item.id)}>
-						<View
-							style={[
-								styles.stepContainer,
-								item.completed && styles.completedStepContainer,
-							]}
-							key={item.id}
-						>
-							<Text
-								style={[
-									styles.stepText,
-									item.completed && styles.completedText,
-								]}
+			{loading ? (
+				<LoadingIndicator />
+			) : (
+				<View style={styles.content}>
+					<FlatList
+						style={{ marginBottom: 20 }}
+						data={taskDetails?.procedure_steps}
+						keyExtractor={(item) => item.id}
+						showsVerticalScrollIndicator={false}
+						renderItem={({ item }) => (
+							<TouchableOpacity
+								onPress={() => toggleStepCompletion(id, item.id)}
 							>
-								{item.stepDescription}
-							</Text>
-							{item.completed && (
-								<Icon
-									name="check"
-									color="green"
-									size={14}
-								/>
-							)}
-						</View>
-					</TouchableOpacity>
-				)}
-				// ListEmptyComponent={<Text>No steps set</Text>}
-			/>
-			{!taskDetails.completed && (
-				<View>
-					{id === timerId && <Text style={styles.timer}>{timer}</Text>}
-
-					<Button
-						title="Complete Task"
-						onPress={() => completeTaskHandler(id)}
+								<View
+									style={[
+										styles.stepContainer,
+										item.completed && styles.completedStepContainer,
+									]}
+								>
+									<Text
+										style={[
+											styles.stepText,
+											item.completed && styles.completedText,
+										]}
+									>
+										{item.stepDescription}
+									</Text>
+									{item.completed && (
+										<Icon
+											name="check"
+											color="green"
+											size={14}
+										/>
+									)}
+								</View>
+							</TouchableOpacity>
+						)}
+						ListEmptyComponent={
+							<View style={styles.noProcedureContainer}>
+								<Text style={styles.description}>No procedure added.</Text>
+							</View>
+						}
 					/>
+					{!taskDetails?.completed && (
+						<View>
+							{id === timerId && <Text style={styles.timer}>{timer}</Text>}
+
+							<Button
+								title="Complete Task"
+								onPress={() => completeTaskHandler(id)}
+							/>
+						</View>
+					)}
+					<View style={{ marginTop: 5 }}>
+						<Button
+							title="Delete Task"
+							onPress={() => deleteTaskHandler(id)}
+						/>
+					</View>
 				</View>
 			)}
 		</View>
@@ -173,6 +213,9 @@ const styles = StyleSheet.create({
 		flex: 1,
 		padding: 16,
 		backgroundColor: Colors.background,
+	},
+	content: {
+		flex: 1,
 	},
 	description: {
 		fontSize: 16,
@@ -206,5 +249,11 @@ const styles = StyleSheet.create({
 	},
 	completedText: {
 		textDecorationLine: 'line-through',
+	},
+	noProcedureContainer: {
+		flex: 1,
+		flexGrow: 1,
+		marginTop: '80%',
+		alignItems: 'center',
 	},
 });

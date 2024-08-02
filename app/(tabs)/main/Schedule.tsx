@@ -7,21 +7,25 @@ import {
 	Pressable,
 	Button,
 } from 'react-native';
-import { useMemo, useRef, useState } from 'react';
+import { useContext, useMemo, useRef, useState } from 'react';
 import Swiper from 'react-native-swiper';
 import { format, add, startOfWeek, addWeeks } from 'date-fns';
 import TaskList from '@/app/tasks/TaskList';
 import { router } from 'expo-router';
 import { Colors } from '@/constants/Colors';
+import { TasksContext } from '@/store/tasks-context';
+import NoUserScreen from '@/components/UI/NoUserScreen';
 
 const { width } = Dimensions.get('screen');
 
 const Schedule = () => {
-
 	const [value, setValue] = useState<Date>(new Date());
 	const [week, setWeek] = useState<number>(0);
 	const swiper = useRef<Swiper | null>(null);
-	console.log(value);
+	const { userId } = useContext(TasksContext);
+
+	const dateString = value.toLocaleDateString();
+
 	const weeks = useMemo(() => {
 		const startDate = addWeeks(startOfWeek(value, { weekStartsOn: 1 }), week);
 
@@ -36,11 +40,18 @@ const Schedule = () => {
 		});
 	}, [week]);
 
-	const addTaskHandler = () => {
+	const addTaskHandler = (selectedDate: string) => {
 		router.push({
 			pathname: '/tasks/AddTask',
+			params: {
+				date: selectedDate,
+			},
 		});
 	};
+
+	if (!userId) {
+		return <NoUserScreen />;
+	}
 
 	return (
 		<SafeAreaView style={styles.content}>
@@ -109,12 +120,12 @@ const Schedule = () => {
 
 				<View style={styles.placeholder}>
 					<View style={styles.placeholderContent}>
-						<TaskList />
+						<TaskList date={dateString} />
 					</View>
 				</View>
 				<Button
 					title="Add Task"
-					onPress={addTaskHandler}
+					onPress={() => addTaskHandler(dateString)}
 				/>
 			</View>
 		</SafeAreaView>

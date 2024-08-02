@@ -8,7 +8,7 @@ import {
 	Button,
 	Animated,
 } from 'react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import {
 	GestureHandlerRootView,
@@ -38,7 +38,13 @@ const ProcedureModal: React.FC<ProcedureModalProps> = ({
 	onClose,
 }) => {
 	const [description, setDescription] = useState('');
-	const [steps, setSteps] = useState<ProcedureStep[]>(procedureSteps);
+	const [steps, setSteps] = useState<ProcedureStep[]>([]);
+
+	useEffect(() => {
+		if (visible) {
+			setSteps(procedureSteps);
+		}
+	}, [visible]);
 
 	const addStepHandler = () => {
 		if (description.trim() === '') {
@@ -102,12 +108,10 @@ const ProcedureModal: React.FC<ProcedureModalProps> = ({
 		return (
 			<TouchableOpacity
 				style={{
-					// flex: 1,
 					height: 40,
 					alignItems: 'center',
 					justifyContent: 'center',
 					backgroundColor: 'red',
-					// margin: 8,
 					paddingHorizontal: 15,
 					width: '100%',
 					borderRadius: 5,
@@ -133,7 +137,7 @@ const ProcedureModal: React.FC<ProcedureModalProps> = ({
 		<Modal
 			visible={visible}
 			presentationStyle="overFullScreen"
-			animationType="slide"
+			animationType="fade"
 			onRequestClose={() => {
 				onClose();
 			}}
@@ -144,8 +148,6 @@ const ProcedureModal: React.FC<ProcedureModalProps> = ({
 					enableAutomaticScroll
 					keyboardDismissMode="on-drag"
 					showsVerticalScrollIndicator={false}
-					// extraHeight={50}
-					// extraScrollHeight={50}
 				>
 					<View style={styles.listContainer}>
 						<Text style={styles.label}>Procedure Steps</Text>

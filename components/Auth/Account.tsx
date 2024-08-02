@@ -1,9 +1,10 @@
 import { useState, useEffect, useContext } from 'react';
 import { supabase } from '../../util/supabase';
-import { StyleSheet, View, Alert } from 'react-native';
+import { StyleSheet, View, Alert, Text } from 'react-native';
 import { Button, Input } from '@rneui/themed';
 import { Session } from '@supabase/supabase-js';
 import { TasksContext } from '@/store/tasks-context';
+import { Colors } from '@/constants/Colors';
 
 export default function Account({ session }: { session: Session }) {
 	const [loading, setLoading] = useState(true);
@@ -73,11 +74,14 @@ export default function Account({ session }: { session: Session }) {
 
 	return (
 		<View style={styles.container}>
+			<Text style={styles.heading}>Hello {username}!</Text>
 			<View style={[styles.verticallySpaced, styles.mt20]}>
 				<Input
 					label="Email"
 					value={session?.user?.email}
 					disabled
+					style={styles.input}
+					cursorColor={Colors.font}
 				/>
 			</View>
 			<View style={styles.verticallySpaced}>
@@ -85,6 +89,8 @@ export default function Account({ session }: { session: Session }) {
 					label="Username"
 					value={username || ''}
 					onChangeText={(text) => setUsername(text)}
+					style={styles.input}
+					cursorColor={Colors.font}
 				/>
 			</View>
 
@@ -118,5 +124,15 @@ const styles = StyleSheet.create({
 	},
 	mt20: {
 		marginTop: 20,
+	},
+	input: {
+		color: Colors.font,
+		marginLeft: 10,
+	},
+	heading: {
+		color: Colors.font,
+		fontSize: 20,
+		textAlign: 'center',
+		marginBottom: 50,
 	},
 });

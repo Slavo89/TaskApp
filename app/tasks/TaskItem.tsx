@@ -7,31 +7,23 @@ import { TimerContext } from '@/store/timer-context';
 interface TaskItemProps {
 	id: string | undefined;
 	title: string;
-	description: string;
-	// date: Date;
 	priority: string;
 	procedure_steps: [] | null;
 	completed: boolean;
 }
 
-const TaskItem: React.FC<TaskItemProps> = ({
-	id,
-	title,
-	description,
-	// date,
-	priority,
-	procedure_steps,
-	completed,
-}) => {
+const TaskItem: React.FC<TaskItemProps> = ({ id, title, completed }) => {
 	const { timerId, timer } = useContext(TimerContext);
 
-	const onPressHandler = () =>
+	const onPressHandler = () => {
 		router.push({
 			pathname: '/tasks/TaskDetails',
 			params: {
-				id
+				id,
+				title,
 			},
 		});
+	};
 
 	return (
 		<Pressable
@@ -61,7 +53,7 @@ const styles = StyleSheet.create({
 	},
 	completed: {
 		backgroundColor: 'grey',
-		opacity: 0.3
+		opacity: 0.3,
 	},
 	container: {
 		flexDirection: 'row',
